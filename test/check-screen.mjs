@@ -1,0 +1,317 @@
+/**
+ * Screen-manager audit harness. Loads makeScreen/makeTurnView straight out of
+ * lib/index.js (no dsh runtime needed), wires them to the vt.mjs emulator,
+ * and replays the interactions that corrupt the display: keystrokes, slash
+ * menu, streaming wrapped text, tool rows, and window resizes.
+ *
+ * Usage: node dev/check-screen.mjs [path-to-index.js]
+ */
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
+import { Term } from './vt.mjs'
+
+const here = dirname(fileURLToPath(import.meta.url))
+const target = process.argv[2] ?? join(here, '..', 'lib', 'index.js')
+
+// ── fake a TTY before the module body evaluates ─────────────────────────────
+let COLS = 100
+let ROWS = 30
+delete process.env.NO_COLOR // the harness wants the color path even in CI shells
+process.stdout.isTTY = true
+process.stdin.isTTY = true
+Object.defineProperty(process.stdout, 'columns', { configurable: true, get: () => COLS })
+Object.defineProperty(process.stdout, 'rows', { configurable: true, get: () => ROWS })
+
+/** Evaluate the app module in a plain function scope and grab its innards. */
+function loadModule(path) {
+  let source = readFileSync(path, 'utf8')
+  source = source
+    .split('\n')
+    .filter((line) => !line.startsWith('import '))
+    .filter((line) => !/^export\s*\{/.test(line))
+    .filter((line) => !/z\.object/.test(line))
+    .join('\n')
+    .replace(/^export /gm, '')
+  source += '\nreturn { makeScreen, makeTurnView, internals }'
+  return new Function(source)()
+}
+
+const { makeScreen, makeTurnView } = loadModule(target)
+
+// ── scenario plumbing ───────────────────────────────────────────────────────
+let failures = 0
+function check(label, ok, detail) {
+  if (ok) {
+    console.log(`  ✓ ${label}`)
+  } else {
+    failures += 1
+    console.log(`  ✗ ${label}${detail ? ` — ${detail}` : ''}`)
+  }
+}
+
+function countLines(rows, needle) {
+  return rows.filter((row) => row.includes(needle)).length
+}
+
+function newScreen() {
+  const term = new Term(COLS, ROWS)
+  const io = { stdout: { write: (chunk) => term.write(chunk) }, stderr: process.stderr }
+  const status = {
+    model: 'deepseek-v4-flash',
+    preset: 'minimal',
+    effort: 'max',
+    permission: 'full access',
+    step: 0,
+    in: 0,
+    out: 0,
+    cache: 0,
+    cwd: '/workspace/demo',
+    sessionId: 'session-test-abcdef'
+  }
+  const screen = makeScreen(io, status)
+  return { term, screen, status }
+}
+
+/** Occurrences of a needle across scrollback + screen, joined per line. */
+function occurrences(term, needle) {
+  return countLines(term.all(), needle)
+}
+
+function dump(term, title) {
+  console.log(`  ── ${title} ──`)
+  const back = term.scrollback()
+  if (back.length > 0) {
+    console.log('  · scrollback ·')
+    for (const row of back) console.log(`    |${row}`)
+  }
+  console.log('  · screen ·')
+  for (const row of term.screen()) console.log(`    |${row}`)
+  console.log(`    cursor: y=${term.y} x=${term.x} (screenTop=${term.screenTop()})`)
+}
+
+// ── 1. initial draw ─────────────────────────────────────────────────────────
+console.log('\n[1] initial draw')
+{
+  const { term, screen } = newScreen()
+  screen.draw()
+  check('single top border on screen', countLines(term.screen(), '╭') === 1)
+  check('single bottom border on screen', countLines(term.screen(), '╰') === 1)
+  const inputRow = term.screen().findIndex((row) => row.includes('❯'))
+  check('cursor rests on the input row', term.y === term.screenTop() + inputRow,
+    `cursor y=${term.y}, input row at screen index ${inputRow} (top=${term.screenTop()})`)
+  check('cursor column after the prompt', term.x === 4, `x=${term.x}`)
+}
+
+// ── 2. typing refreshes the bar in place ────────────────────────────────────
+console.log('\n[2] typing five characters')
+{
+  const { term, screen } = newScreen()
+  screen.draw()
+  for (const ch of 'hello') screen.insert(ch)
+  check('no stray borders above the box', occurrences(term, '╭') === 1,
+    `found ${occurrences(term, '╭')} top borders total`)
+  check('single bottom border', occurrences(term, '╰') === 1)
+  const inputLine = term.screen().find((row) => row.includes('❯'))
+  check('buffer visible in the input row', inputLine?.includes('hello') ?? false, inputLine)
+  check('cursor after the typed text', term.x === 4 + 5, `x=${term.x}`)
+  dump(term, 'after typing "hello"')
+}
+
+// ── 3. slash menu ───────────────────────────────────────────────────────────
+console.log('\n[3] slash menu open/close')
+{
+  const { term, screen } = newScreen()
+  screen.draw()
+  screen.insert('/')
+  check('menu lists all commands', countLines(term.screen(), '/help') === 1 && countLines(term.screen(), '/exit') === 1)
+  screen.closeMenu()
+  check('menu closes without leftovers', countLines(term.all(), '/sessions') === 0)
+  check('box intact after menu', occurrences(term, '╭') === 1 && occurrences(term, '╰') === 1)
+}
+
+// ── 4. streaming a long wrapped line repeatedly ─────────────────────────────
+console.log('\n[4] streaming a long (wrapping) line in three paints')
+{
+  const { term, screen } = newScreen()
+  screen.draw()
+  const chunk = 'lorem-ipsum-dolor-sit-amet-' // 27 cells; 10 chunks = 270 cells > 2 rows at 100 cols
+  let streamed = ''
+  for (let i = 0; i < 3; i++) {
+    screen.paint(() => {
+      for (let k = 0; k < (i + 1) * 3; k++) {
+        // simulate progressive streaming: the pending line keeps growing
+      }
+    })
+  }
+  // simpler faithful replay: three paints, each appending more text
+  const term2 = new Term(COLS, ROWS)
+  const io2 = { stdout: { write: (c) => term2.write(c) }, stderr: process.stderr }
+  const screen2 = makeScreen(io2, { model: 'm', effort: 'e', permission: 'p', step: 0, in: 0, out: 0, cache: 0, cwd: '/tmp', sessionId: 's' })
+  screen2.draw()
+  for (let round = 0; round < 3; round++) {
+    screen2.paint(() => {
+      for (let k = 0; k < 4; k++) {
+        screen2.text(chunk)
+        streamed += chunk
+      }
+    })
+  }
+  const joined = term2.logical().join('\n')
+  const hits = joined.split('lorem-ipsum').length - 1
+  const expected = streamed.split('lorem-ipsum').length - 1
+  check('streamed text appears exactly once', hits === expected, `expected ${expected} occurrences, screen holds ${hits}`)
+  check('box still singular after streaming', occurrences(term2, '╭') === 1 && occurrences(term2, '╰') === 1)
+  dump(term2, 'after streaming')
+}
+
+// ── 5. tool call row overwritten by its result ──────────────────────────────
+console.log('\n[5] tool call row overwritten by result')
+{
+  const { term, screen } = newScreen()
+  const view = makeTurnView(screen)
+  screen.draw()
+  screen.paint(() => view.toolCall('bash', JSON.stringify({ command: 'ls -la' })))
+  screen.paint(() => view.toolResult('bash', true, 'total 42'))
+  const joined = term.all().join('\n')
+  check('result row present', joined.includes('total 42'))
+  check('call row fully replaced', !joined.includes('⚙️'), `leftover: ${joined.split('\n').filter((l) => l.includes('bash')).join(' | ')}`)
+  check('box singular', occurrences(term, '╭') === 1)
+}
+
+// ── 6. resize narrower, then wider ──────────────────────────────────────────
+console.log('\n[6] resize 100 → 60 → 120')
+{
+  const { term, screen, status } = newScreen()
+  screen.draw()
+  for (const ch of 'draft') screen.insert(ch)
+  screen.paint(() => screen.text('some earlier answer text that is done\n'))
+  COLS = 60
+  term.resize(60, ROWS)
+  screen.refresh()
+  check('single box after narrowing', occurrences(term, '╭') === 1 && occurrences(term, '╰') === 1,
+    `borders: ${occurrences(term, '╭')}/${occurrences(term, '╰')}`)
+  check('buffer survives narrowing', term.all().join('\n').includes('draft'))
+  check('status row survives narrowing', term.all().join('\n').includes('deepseek-v4-flash'))
+  COLS = 120
+  term.resize(120, ROWS)
+  screen.refresh()
+  check('single box after widening', occurrences(term, '╭') === 1 && occurrences(term, '╰') === 1)
+  check('history not duplicated by resize', countLines(term.all(), 'some earlier answer text that is done') === 1,
+    `found ${countLines(term.all(), 'some earlier answer text that is done')}`)
+  dump(term, 'after resizes')
+}
+
+// ── 7. resize while a partial line is pending ───────────────────────────────
+console.log('\n[7] resize with a wrapped pending line mid-stream')
+{
+  const term = new Term(COLS = 100, ROWS)
+  const io = { stdout: { write: (c) => term.write(c) }, stderr: process.stderr }
+  const screen = makeScreen(io, { model: 'm', effort: 'e', permission: 'p', step: 0, in: 0, out: 0, cache: 0, cwd: '/tmp', sessionId: 's' })
+  screen.draw()
+  screen.paint(() => {
+    for (let k = 0; k < 6; k++) screen.text('wrap-me-gently-') // 90 cells, wraps at 60
+  })
+  COLS = 60
+  term.resize(60, ROWS)
+  screen.refresh()
+  const hits = term.logical().join('\n').split('wrap-me-gently').length - 1
+  check('pending line not duplicated by resize', hits === 6, `expected 6, got ${hits}`)
+  check('single box after resize', occurrences(term, '╭') === 1 && occurrences(term, '╰') === 1)
+  COLS = 100 // restore for later scenarios
+  term.resize(100, ROWS)
+  screen.refresh()
+}
+
+// ── 8. Ctrl+L clear ─────────────────────────────────────────────────────────
+console.log('\n[8] clearScreen')
+{
+  const { term, screen } = newScreen()
+  screen.draw()
+  screen.paint(() => screen.text('transcript line\n'))
+  screen.clearScreen()
+  check('box redrawn after clear', countLines(term.screen(), '╭') === 1)
+}
+
+// ── 9. menu open across a resize ────────────────────────────────────────────
+console.log('\n[9] slash menu survives a resize')
+{
+  const { term, screen } = newScreen()
+  screen.draw()
+  screen.insert('/')
+  COLS = 70
+  term.resize(70, ROWS)
+  screen.refresh()
+  check('menu still listed at new width', countLines(term.screen(), '/help') === 1)
+  check('exactly one box with menu open', occurrences(term, '╭') === 1 && occurrences(term, '╰') === 1)
+  screen.closeMenu()
+  COLS = 100
+  term.resize(100, ROWS)
+  screen.refresh()
+  check('menu closed cleanly after resize', countLines(term.all(), '/sessions') === 0)
+}
+
+// ── 10. history recall ──────────────────────────────────────────────────────
+console.log('\n[10] history recall')
+{
+  const { term, screen } = newScreen()
+  screen.draw()
+  for (const ch of 'first message') screen.insert(ch)
+  screen.submit()
+  screen.historyBack()
+  const inputLine = term.screen().find((row) => row.includes('❯'))
+  check('history restores the submitted line', inputLine?.includes('first message') ?? false, inputLine)
+  screen.historyForward()
+  const cleared = term.screen().find((row) => row.includes('❯'))
+  check('history forward restores the draft', cleared !== undefined && !cleared.includes('first message'))
+}
+
+// ── 11b. reasoning → text transition ends the line ──────────────────────────
+console.log('\n[11b] reasoning → text line break')
+{
+  const make = () => {
+    const term = new Term(COLS, ROWS)
+    const io = { stdout: { write: (c) => term.write(c) }, stderr: process.stderr }
+    return { term, screen: makeScreen(io, { model: 'm', effort: 'e', permission: 'p', step: 0, in: 0, out: 0, cache: 0, cwd: '/tmp', sessionId: 's', busy: false, tick: 0, elapsed: 0, verb: 'working' }) }
+  }
+  const a = make()
+  a.screen.draw()
+  const viewA = makeTurnView(a.screen)
+  a.screen.paint(() => {
+    viewA.reasoning('thinking here')
+    viewA.text('answer')
+  })
+  const linesA = a.term.logical().filter((l) => l.includes('thinking') || l.includes('answer'))
+  check('same-paint transition breaks the line', linesA.length === 2, JSON.stringify(linesA))
+
+  const b = make()
+  b.screen.draw()
+  const viewB = makeTurnView(b.screen)
+  b.screen.paint(() => viewB.reasoning('thinking here'))
+  b.screen.paint(() => viewB.text('answer'))
+  const linesB = b.term.logical().filter((l) => l.includes('thinking') || l.includes('answer'))
+  check('cross-paint transition breaks the line', linesB.length === 2, JSON.stringify(linesB))
+}
+
+// ── 12. short terminal drops secondary rows ─────────────────────────────────
+console.log('\n[12] compact layout on short terminals')
+{
+  COLS = 100
+  ROWS = 10
+  const term = new Term(100, 10)
+  const io = { stdout: { write: (c) => term.write(c) }, stderr: process.stderr }
+  const screen = makeScreen(io, { model: 'm', preset: 'minimal', effort: 'e', permission: 'p', step: 0, in: 0, out: 0, cache: 0, cwd: '/tmp', sessionId: 's', busy: false, tick: 0, elapsed: 0, verb: 'working' })
+  screen.draw()
+  const boxRows = term.screen().filter((row) => row.startsWith('│') || row.startsWith('╭') || row.startsWith('╰'))
+  check('box stays compact when short', boxRows.length === 3, `box rows: ${boxRows.length}`)
+  check('status row retained at ten rows', term.screen().some((row) => row.includes('preset: minimal')))
+  ROWS = 8
+  term.resize(100, 8)
+  screen.refresh()
+  const compact = term.screen().filter((row) => row.startsWith('│') || row.startsWith('╭') || row.startsWith('╰'))
+  check('status row dropped when tiny', compact.length === 3, `box rows: ${compact.length}`)
+  ROWS = 30
+}
+
+console.log(failures === 0 ? '\nALL CHECKS PASSED' : `\n${failures} CHECK(S) FAILED`)
+process.exit(failures === 0 ? 0 : 1)

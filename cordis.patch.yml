@@ -1,0 +1,110 @@
+# The dsh-tui-app bundle patch: an interactive terminal chat surface over
+# dsh-base. Applied after the base bundle's insert; rows here override base
+# rows by id, with the profile's own cordis.patch.yml and any --patch
+# overlays still to come.
+#
+# The tui-startup plugin injects `cmdlineArgs` and provides `tuiStartup` as an
+# ordinary Cordis service (parsed flags: --resume <id>, --preset <id>). The tui-runner row
+# below injects that service, so the Loader resolves its expressions only
+# after the flags are parsed. `dsh --profile tui --help` provides no
+# tuiStartup, so nothing binds and the process exits after printing help.
+
+# ── surface-specific values the base deliberately omits ─────────────────────
+
+- id: system-prompt
+  config:
+    persona: >-
+      You are a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.
+
+# The shared module-reload HMR row stays off; the launcher's watch-only
+# fallback still keeps the user patch layers live until the run exits.
+- id: hmr
+  disabled: true
+
+- id: tools
+  config:
+    # Keep the same temporary process-wide Code Mode opt-in as the Web surface.
+    mode: !!js process.env.DSH_TOOLS_MODE
+
+# The base bundle exposes one process-wide coding-agent toolset. This TUI now
+# composes every session from an agent preset instead, matching the Web surface:
+# host registries stay mounted, while model-facing rows move behind the preset.
+- id: tool-bash
+  disabled: true
+- id: tool-pwsh
+  disabled: true
+- id: tool-jobs
+  disabled: true
+- id: tool-fs
+  disabled: true
+- id: tool-fs-search
+  disabled: true
+- id: tool-str-replace-editor
+  disabled: true
+- id: skill-filesystem
+  disabled: true
+- id: tool-skill
+  disabled: true
+- id: tool-goal
+  disabled: true
+- id: plan-mode
+  disabled: true
+- id: compaction-basic
+  disabled: true
+- id: command-compact
+  disabled: true
+- id: tool-result-pruner
+  disabled: true
+- id: tool-subagent-control
+  disabled: true
+- id: tool-subagent-list-agents
+  disabled: true
+- id: tool-subagent
+  disabled: true
+- id: tool-subagent-fork
+  disabled: true
+- id: workflow-worker-thread
+  disabled: true
+- id: tool-workflow
+  disabled: true
+- id: tool-ralph
+  disabled: true
+- id: agent-instructions
+  disabled: true
+- id: tool-todo
+  disabled: true
+- id: tool-web
+  disabled: true
+
+# ── the interactive terminal app ────────────────────────────────────────────
+
+- insert:
+    # PTC mode presents the preset's tools through run_code and requires this
+    # host-plane worker. Other presets leave it idle.
+    - id: code-runtime
+      name: '@deepseek-ai/dsh-code-runtime-worker-thread'
+
+    # Cordis mode needs the host-side dynamic package registry and read-only
+    # inspect providers. Client-half packages still require a connected Web UI;
+    # host-only experiments work directly in the TUI process.
+    - id: cordis-host-runner
+      name: '@deepseek-ai/dsh-cordis-host-runner'
+
+    # The shipped roster path is injected by the dsh profile composer; the
+    # settings.yaml agent-presets.default value remains the default for new
+    # sessions that do not pass --preset.
+    - id: agent-presets
+      name: '@deepseek-ai/dsh-agent-presets'
+      config:
+        default: standard
+
+    - id: tui-startup
+      name: 'dsh-tui-app/startup'
+      inject: [cmdlineArgs]
+
+    - id: tui-runner
+      name: 'dsh-tui-app'
+      inject: [tuiStartup]
+      config:
+        resume: !!js ctx.tuiStartup.resume ?? undefined
+        preset: !!js ctx.tuiStartup.preset ?? undefined
