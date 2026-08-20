@@ -13,9 +13,9 @@
 
 ![DSH TUI 本地启动界面](docs/assets/tui-startup.png)
 
-图片来自真实的本地 `dsh --profile tui` 启动首屏，并使用隔离 profile 与一次性的
-`/private/tmp/dsh-tui-demo` 工作目录。截图不包含用户名、主目录路径、会话 ID 或
-个人项目信息。
+图片裁剪自真实的本地 `dsh --profile tui` 启动首屏；已移除终端窗口栏和 shell
+历史，并把工作目录匿名化为 `/workspace/demo`。截图不包含用户名、主目录路径、
+会话 ID 或个人项目信息。
 
 ## 功能
 

@@ -13,10 +13,10 @@ project published as [`ccch1mneyyy/dsh-TUI`](https://github.com/ccch1mneyyy/dsh-
 
 ![DSH TUI startup screen](docs/assets/tui-startup.png)
 
-The image shows a real local `dsh --profile tui` startup rendered from an
-isolated profile and the disposable `/private/tmp/dsh-tui-demo` workspace. It
-contains no user name, home-directory path, session ID, or personal project
-information.
+The image is cropped from a real local `dsh --profile tui` startup. Shell
+history and window chrome were removed, and the workspace path was anonymized
+as `/workspace/demo`; it contains no user name, home-directory path, session
+ID, or personal project information.
 
 ## Features
 
