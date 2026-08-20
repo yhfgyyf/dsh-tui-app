@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const source = readFileSync(join(here, '..', 'lib', 'index.js'), 'utf8')
+const startupSource = readFileSync(join(here, '..', 'lib', 'startup.js'), 'utf8')
 
 function extractFunction(name) {
   const start = source.indexOf(`function ${name}(`)
@@ -48,4 +49,21 @@ assert.equal(helpers.resolvePreset({
   events: [{ type: 'agent-preset/selected', data: { agentPreset: 'cordis' } }]
 }), 'cordis')
 
-console.log('preset blank-session lock and durable selection fold checks passed')
+const collectorStart = startupSource.indexOf('export function collectImagePaths(')
+assert.notEqual(collectorStart, -1, 'missing collectImagePaths in lib/startup.js')
+const collectorBody = startupSource.indexOf('{', collectorStart)
+let collectorEnd = -1
+let collectorDepth = 0
+for (let index = collectorBody; index < startupSource.length; index += 1) {
+  if (startupSource[index] === '{') collectorDepth += 1
+  if (startupSource[index] === '}') collectorDepth -= 1
+  if (collectorDepth === 0) {
+    collectorEnd = index + 1
+    break
+  }
+}
+const collectorSource = startupSource.slice(collectorStart, collectorEnd).replace(/^export /, '')
+const collectImagePaths = new Function(`${collectorSource}; return collectImagePaths`)()
+assert.deepEqual(collectImagePaths('a.png,b.jpg', ['first.webp']), ['first.webp', 'a.png', 'b.jpg'])
+
+console.log('preset lock, durable selection, and repeatable image flag checks passed')

@@ -20,7 +20,12 @@ ID, or personal project information.
 
 ## Features
 
-- Streaming assistant text, reasoning, tool calls, and tool results.
+- Streaming assistant text, reasoning, tool calls, tool results, and
+  Codex-style `[Image #N]` placeholders for image output/history.
+- Native rc.8 image input through repeatable `--image`/`-i` startup flags or
+  `/image` for the next prompt; attachment bytes remain in DSH's local store.
+  Before sending, the TUI uses rc.8's model-capability preflight and retains
+  the pending batch when the selected model is explicitly text-only.
 - Bordered TTY composer with command completion, history, resize reflow, and a
   plain line-loop fallback when stdin/stdout are pipes.
 - New, resume, list, and delete session flows over DSH's durable session store.
@@ -33,7 +38,7 @@ ID, or personal project information.
 
 ## Install
 
-Requires DeepSeek Harness `0.1.0-rc.6` or a compatible later build.
+Requires DeepSeek Harness `0.1.0-rc.8` or a compatible later build.
 
 ```sh
 dsh plugin --profile tui add github:yhfgyyf/dsh-tui-app
@@ -48,6 +53,8 @@ Startup options:
 ```sh
 dsh --profile tui --help
 dsh --profile tui --preset minimal
+dsh --profile tui -i diagram.png
+dsh --profile tui -i a.png -i b.jpg
 dsh --profile tui --resume <session-id>
 ```
 
@@ -61,8 +68,11 @@ dsh --profile tui --preset auto
 
 ## Commands and keys
 
-Local commands include `/help`, `/sessions`, `/resume`, `/preset`, `/new`,
-`/model`, `/effort`, and `/exit`. DSH application commands such as `/compact`,
+Local commands include `/help`, `/image`, `/sessions`, `/resume`, `/preset`,
+`/new`, `/model`, `/effort`, and `/exit`. `/image a.png,b.jpg` attaches images
+to the next prompt and `/image clear` removes the pending batch. The shipped
+DeepSeek V4 Flash/Pro routes are text-only; use an image-capable model configured
+through DSH's official provider settings before sending. DSH application commands such as `/compact`,
 `/goal`, `/feedback`, and `/export` are merged from the shared command
 registry when their providers are composed.
 

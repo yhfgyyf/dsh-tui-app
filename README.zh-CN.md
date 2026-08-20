@@ -19,7 +19,11 @@
 
 ## 功能
 
-- 流式显示回答、思考、工具调用与工具结果。
+- 流式显示回答、思考、工具调用与工具结果；图片输出与历史使用 Codex 风格的
+  `[Image #N]` 占位符。
+- 通过可重复的 `--image`/`-i` 启动参数或 `/image` 命令把图片附加到下一条
+  prompt；图片字节保留在 DSH rc.8 的本地附件存储中。发送前会执行与 Web 相同
+  的 rc.8 模型能力预检；当前模型明确为纯文本时保留待发送图片，不会启动模型回合。
 - TTY 下提供固定边框输入框、命令补全、历史记录与窗口缩放重排；管道输入输出时
   自动退化为普通逐行循环。
 - 基于 DSH 持久会话存储的新建、恢复、列表与删除流程。
@@ -29,7 +33,7 @@
 
 ## 安装
 
-要求 DeepSeek Harness `0.1.0-rc.6` 或兼容的后续版本。
+要求 DeepSeek Harness `0.1.0-rc.8` 或兼容的后续版本。
 
 ```sh
 dsh plugin --profile tui add github:yhfgyyf/dsh-tui-app
@@ -44,6 +48,8 @@ dsh --profile tui
 ```sh
 dsh --profile tui --help
 dsh --profile tui --preset minimal
+dsh --profile tui -i diagram.png
+dsh --profile tui -i a.png -i b.jpg
 dsh --profile tui --resume <session-id>
 ```
 
@@ -57,8 +63,10 @@ dsh --profile tui --preset auto
 
 ## 命令与按键
 
-本地命令包括 `/help`、`/sessions`、`/resume`、`/preset`、`/new`、
-`/model`、`/effort` 和 `/exit`。当相应 provider 已组装时，`/compact`、
+本地命令包括 `/help`、`/image`、`/sessions`、`/resume`、`/preset`、`/new`、
+`/model`、`/effort` 和 `/exit`。`/image a.png,b.jpg` 会把图片附加到下一条
+prompt，`/image clear` 清除待发送图片。官方自带的 DeepSeek V4 Flash/Pro 路由是
+纯文本的；发送前需要按 DSH 官方 provider 设置配置并选择支持图片的模型。当相应 provider 已组装时，`/compact`、
 `/goal`、`/feedback`、`/export` 等 DSH 应用命令会从共享注册表自动加入。
 
 主要按键：Enter 发送，↑/↓ 浏览历史或选择项目，Tab 补全，Shift+Tab 循环权限，

@@ -17,6 +17,7 @@ assert.match(patch, /^\s*- id: tui-startup/mu)
 assert.match(patch, /^\s*name: 'dsh-tui-app\/startup'/mu)
 assert.match(patch, /^\s*- id: tui-runner/mu)
 assert.match(patch, /^\s*name: 'dsh-tui-app'/mu)
+assert.match(patch, /^\s*images: !!js ctx\.tuiStartup\.images \?\? \[\]/mu)
 
 for (const dependency of [
   '@deepseek-ai/dsh-agent',

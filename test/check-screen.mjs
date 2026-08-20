@@ -37,7 +37,7 @@ function loadModule(path) {
   return new Function(source)()
 }
 
-const { makeScreen, makeTurnView } = loadModule(target)
+const { makeScreen, makeTurnView, internals } = loadModule(target)
 
 // ── scenario plumbing ───────────────────────────────────────────────────────
 let failures = 0
@@ -311,6 +311,38 @@ console.log('\n[12] compact layout on short terminals')
   const compact = term.screen().filter((row) => row.startsWith('│') || row.startsWith('╭') || row.startsWith('╰'))
   check('status row dropped when tiny', compact.length === 3, `box rows: ${compact.length}`)
   ROWS = 30
+}
+
+// ── 13. assistant image placeholders ───────────────────────────────────────
+console.log('\n[13] Codex-style image placeholders')
+{
+  COLS = 100
+  ROWS = 30
+  const { term, screen } = newScreen()
+  const view = makeTurnView(screen)
+  screen.draw()
+  screen.paint(() => {
+    view.image({ name: 'chart.png', width: 640, height: 480 })
+    view.image({ name: 'detail.webp', width: 320, height: 200 })
+  })
+  const joined = term.all().join('\n')
+  check('first assistant image uses [Image #1]', joined.includes('[Image #1] chart.png · 640×480'))
+  check('second assistant image increments the placeholder', joined.includes('[Image #2] detail.webp · 320×200'))
+  check('history formatter keeps text and image order', internals.messageDisplay([
+    { type: 'text', text: 'before' },
+    { type: 'image', attachment: { name: 'chart.png', width: 640, height: 480 } },
+    { type: 'text', text: 'after' }
+  ]) === 'before\n[Image #1] chart.png · 640×480\nafter')
+  check('PNG signature is admitted without a private package export', internals.imageMediaType(
+    Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+  ) === 'image/png')
+  check('explicit text-only model is rejected before image send', internals.modelAcceptsImages({
+    inputModalities: ['text']
+  }) === false)
+  check('declared image model is accepted before image send', internals.modelAcceptsImages({
+    inputModalities: ['text', 'image']
+  }) === true)
+  check('unknown modality metadata follows rc.8 permissive preflight', internals.modelAcceptsImages({}) === true)
 }
 
 console.log(failures === 0 ? '\nALL CHECKS PASSED' : `\n${failures} CHECK(S) FAILED`)
