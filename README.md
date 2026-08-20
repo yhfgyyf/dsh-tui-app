@@ -9,6 +9,15 @@ services, and supplies a terminal chat surface over them.
 This is an independent lightweight implementation. It is not the React/Ink
 project published as [`ccch1mneyyy/dsh-TUI`](https://github.com/ccch1mneyyy/dsh-TUI).
 
+## Preview
+
+![DSH TUI startup screen](docs/assets/tui-startup.png)
+
+The image shows a real local `dsh --profile tui` startup rendered from an
+isolated profile and the disposable `/private/tmp/dsh-tui-demo` workspace. It
+contains no user name, home-directory path, session ID, or personal project
+information.
+
 ## Features
 
 - Streaming assistant text, reasoning, tool calls, and tool results.

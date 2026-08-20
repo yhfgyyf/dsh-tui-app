@@ -9,6 +9,14 @@
 这是独立的轻量实现，不是 React/Ink 架构的
 [`ccch1mneyyy/dsh-TUI`](https://github.com/ccch1mneyyy/dsh-TUI)。
 
+## 界面预览
+
+![DSH TUI 本地启动界面](docs/assets/tui-startup.png)
+
+图片来自真实的本地 `dsh --profile tui` 启动首屏，并使用隔离 profile 与一次性的
+`/private/tmp/dsh-tui-demo` 工作目录。截图不包含用户名、主目录路径、会话 ID 或
+个人项目信息。
+
 ## 功能
 
 - 流式显示回答、思考、工具调用与工具结果。

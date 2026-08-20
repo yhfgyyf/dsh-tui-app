@@ -30,7 +30,13 @@ for (const dependency of [
   assert.equal(typeof manifest.peerDependencies[dependency], 'string', `missing peer ${dependency}`)
 }
 
-for (const relative of ['lib/index.js', 'lib/startup.js', 'cordis.patch.yml', 'LICENSE']) {
+for (const relative of [
+  'lib/index.js',
+  'lib/startup.js',
+  'cordis.patch.yml',
+  'docs/assets/tui-startup.png',
+  'LICENSE'
+]) {
   await access(join(root, relative))
 }
 
