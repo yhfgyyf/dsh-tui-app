@@ -293,6 +293,24 @@ console.log('\n[11b] reasoning → text line break')
   check('cross-paint transition breaks the line', linesB.length === 2, JSON.stringify(linesB))
 }
 
+// ── 11c. refresh requested inside a streaming paint ───────────────────────
+console.log('\n[11c] deferred refresh inside streaming paint')
+{
+  const { term, screen } = newScreen()
+  screen.draw()
+  screen.paint(() => {
+    // Auto routing refreshes slash commands when agent-preset/selected arrives
+    // in the same drained batch as the first reasoning delta.
+    screen.setMenuCommands([{ name: '/help', desc: 'show help' }])
+    screen.text('first reasoning delta')
+  })
+  check('paint-internal command refresh does not duplicate the input frame',
+    occurrences(term, '╭') === 1 && occurrences(term, '╰') === 1,
+    `borders: ${occurrences(term, '╭')}/${occurrences(term, '╰')}`)
+  check('reasoning survives the deferred refresh',
+    term.logical().join('\n').includes('first reasoning delta'))
+}
+
 // ── 12. short terminal drops secondary rows ─────────────────────────────────
 console.log('\n[12] compact layout on short terminals')
 {
@@ -343,6 +361,51 @@ console.log('\n[13] Codex-style image placeholders')
     inputModalities: ['text', 'image']
   }) === true)
   check('unknown modality metadata follows rc.8 permissive preflight', internals.modelAcceptsImages({}) === true)
+}
+
+// ── 14. pasted image composer placeholders ────────────────────────────────
+console.log('\n[14] pasted image composer placeholders')
+{
+  COLS = 100
+  ROWS = 30
+  const { term, screen } = newScreen()
+  check('screen exposes pending image placeholders', typeof screen.setComposerImages === 'function')
+  if (typeof screen.setComposerImages === 'function') {
+    screen.setComposerImages([
+      { name: 'first.png' },
+      { name: 'second.jpg' }
+    ])
+    screen.draw()
+    screen.insert('describe these')
+    const inputLine = term.screen().find((row) => row.includes('❯'))
+    check('pending images render before the draft', inputLine?.includes('[Image #1] [Image #2] describe these') ?? false, inputLine)
+    screen.setComposerImages([])
+    const cleared = term.screen().find((row) => row.includes('❯'))
+    check('clearing attachments removes image placeholders', !(cleared?.includes('[Image #') ?? true), cleared)
+  }
+  check('shell-escaped pasted image paths are normalized',
+    internals.normalizePastedPath?.('/tmp/My\\ Image.png') === '/tmp/My Image.png')
+  check('quoted pasted image paths are normalized',
+    internals.normalizePastedPath?.('"/tmp/My Image.png"') === '/tmp/My Image.png')
+  check('filename-only image paste with spaces reaches clipboard fallback',
+    internals.pastedImagePath?.('Screenshot 2026-08-20 at 19.00.00.png') === 'Screenshot 2026-08-20 at 19.00.00.png')
+  check('ordinary multi-word text is not treated as one image path',
+    internals.normalizePastedPath?.('describe this image') === undefined)
+}
+
+// ── 15. multi-provider model catalog ──────────────────────────────────────
+console.log('\n[15] multi-provider model catalog')
+{
+  const groups = [
+    { id: 'deepseek-official', name: 'DeepSeek', models: [{ id: 'shared', name: 'Shared DS' }, { id: 'deepseek-v4-pro', name: 'V4 Pro' }] },
+    { id: 'kimi-coding', name: 'Kimi Coding', models: [{ id: 'shared', name: 'Shared Kimi' }, { id: 'kimi-k2.5', name: 'Kimi K2.5' }] }
+  ]
+  check('provider/model request resolves across the whole catalog',
+    internals.modelCatalogMatches?.(groups, 'kimi-coding/kimi-k2.5')?.[0]?.provider === 'kimi-coding')
+  check('unique bare model id resolves to its provider',
+    internals.modelCatalogMatches?.(groups, 'deepseek-v4-pro')?.[0]?.provider === 'deepseek-official')
+  check('ambiguous bare model id keeps both provider choices',
+    internals.modelCatalogMatches?.(groups, 'shared')?.length === 2)
 }
 
 console.log(failures === 0 ? '\nALL CHECKS PASSED' : `\n${failures} CHECK(S) FAILED`)

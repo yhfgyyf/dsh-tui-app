@@ -23,7 +23,9 @@ ID, or personal project information.
 - Streaming assistant text, reasoning, tool calls, tool results, and
   Codex-style `[Image #N]` placeholders for image output/history.
 - Native rc.8 image input through repeatable `--image`/`-i` startup flags or
-  `/image` for the next prompt; attachment bytes remain in DSH's local store.
+  `/image` for the next prompt; pasted image paths are attached automatically,
+  and Ctrl+V reads a copied Finder file or bitmap on macOS. Pending images use
+  `[Image #N]` placeholders while attachment bytes remain in DSH's local store.
   Before sending, the TUI uses rc.8's model-capability preflight and retains
   the pending batch when the selected model is explicitly text-only.
 - Bordered TTY composer with command completion, history, resize reflow, and a
@@ -70,15 +72,17 @@ dsh --profile tui --preset auto
 
 Local commands include `/help`, `/image`, `/sessions`, `/resume`, `/preset`,
 `/new`, `/model`, `/effort`, and `/exit`. `/image a.png,b.jpg` attaches images
-to the next prompt and `/image clear` removes the pending batch. The shipped
+to the next prompt and `/image clear` removes the pending batch. `/model` lists
+models from every configured provider; `/model <provider>/<id>` switches routes.
+The shipped
 DeepSeek V4 Flash/Pro routes are text-only; use an image-capable model configured
 through DSH's official provider settings before sending. DSH application commands such as `/compact`,
 `/goal`, `/feedback`, and `/export` are merged from the shared command
 registry when their providers are composed.
 
 Main keys: Enter sends, Up/Down navigate history or pickers, Tab completes,
-Shift+Tab cycles permission presets, Esc interrupts/closes, Ctrl+L clears, and
-Ctrl+D exits.
+Shift+Tab cycles permission presets, Ctrl+V pastes a clipboard image on macOS,
+Esc interrupts/closes, Ctrl+L clears, and Ctrl+D exits.
 
 ## Security boundary
 
