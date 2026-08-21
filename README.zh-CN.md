@@ -23,8 +23,9 @@
   `[Image #N]` 占位符。
 - 通过可重复的 `--image`/`-i` 启动参数或 `/image` 命令把图片附加到下一条
   prompt；粘贴图片路径时会自动附加，macOS 上按 Ctrl+V 还可以直接读取从 Finder
-  或其他应用复制的图片。待发送图片显示为 `[Image #N]`，图片字节保留在 DSH rc.8
-  的本地附件存储中。发送前会执行与 Web 相同的 rc.8 模型能力预检；当前模型明确
+  或其他应用复制的图片。这里必须按 Control+V，而不是 Command/⌘V：Terminal 不会把
+  纯图片的 Command+V 粘贴传给 TUI 进程。待发送图片显示为 `[Image #N]`，图片字节
+  保留在 DSH rc.1 的本地附件存储中。发送前会执行与 Web 相同的 rc.1 模型能力预检；当前模型明确
   为纯文本时保留待发送图片，不会启动模型回合。
 - TTY 下提供固定边框输入框、命令补全、历史记录与窗口缩放重排；管道输入输出时
   自动退化为普通逐行循环。
@@ -35,7 +36,7 @@
 
 ## 安装
 
-要求 DeepSeek Harness `0.1.0-rc.8` 或兼容的后续版本。
+要求 DeepSeek Harness `0.1.1-rc.1` 或兼容的后续版本。
 
 ```sh
 dsh plugin --profile tui add github:yhfgyyf/dsh-tui-app
@@ -69,11 +70,13 @@ dsh --profile tui --preset auto
 `/model`、`/effort` 和 `/exit`。`/image a.png,b.jpg` 会把图片附加到下一条
 prompt，`/image clear` 清除待发送图片。`/model` 会列出所有已配置 provider 的模型，
 也可用 `/model <provider>/<id>` 切换路由。官方自带的 DeepSeek V4 Flash/Pro 路由是
-纯文本的；发送前需要按 DSH 官方 provider 设置配置并选择支持图片的模型。当相应 provider 已组装时，`/compact`、
+纯文本的；rc.1 新增官方 `deepseek-v4-flash-vision-exp` 图片模型，发送前应选择该模型
+或其他明确声明图片输入能力的路由。当相应 provider 已组装时，`/compact`、
 `/goal`、`/feedback`、`/export` 等 DSH 应用命令会从共享注册表自动加入。
 
 主要按键：Enter 发送，↑/↓ 浏览历史或选择项目，Tab 补全，Shift+Tab 循环权限，
-macOS 上 Ctrl+V 粘贴剪贴板图片，Esc 中断或关闭菜单，Ctrl+L 清屏，Ctrl+D 退出。
+macOS 上按 Control+V（不是 Command/⌘V）粘贴剪贴板图片，Esc 中断或关闭菜单，
+Ctrl+L 清屏，Ctrl+D 退出。
 
 ## 安全边界
 

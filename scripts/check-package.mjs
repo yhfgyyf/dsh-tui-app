@@ -31,6 +31,12 @@ for (const dependency of [
   assert.equal(typeof manifest.peerDependencies[dependency], 'string', `missing peer ${dependency}`)
 }
 
+for (const [dependency, range] of Object.entries(manifest.peerDependencies)) {
+  if (dependency.startsWith('@deepseek-ai/dsh-')) {
+    assert.equal(range, '^0.1.1-rc.1', `${dependency} must target the current DSH rc.1 line`)
+  }
+}
+
 for (const relative of [
   'lib/index.js',
   'lib/startup.js',
