@@ -360,7 +360,7 @@ console.log('\n[13] Codex-style image placeholders')
   check('declared image model is accepted before image send', internals.modelAcceptsImages({
     inputModalities: ['text', 'image']
   }) === true)
-  check('unknown modality metadata follows rc.8 permissive preflight', internals.modelAcceptsImages({}) === true)
+  check('unknown modality metadata follows DSH permissive preflight', internals.modelAcceptsImages({}) === true)
 }
 
 // ── 14. pasted image composer placeholders ────────────────────────────────
@@ -391,6 +391,8 @@ console.log('\n[14] pasted image composer placeholders')
     internals.pastedImagePath?.('Screenshot 2026-08-20 at 19.00.00.png') === 'Screenshot 2026-08-20 at 19.00.00.png')
   check('ordinary multi-word text is not treated as one image path',
     internals.normalizePastedPath?.('describe this image') === undefined)
+  check('built-in help distinguishes Control+V from Command+V on macOS',
+    internals.help?.includes('ctrl+v') === true && internals.help?.includes('Control, not Command') === true)
 }
 
 // ── 15. multi-provider model catalog ──────────────────────────────────────

@@ -22,11 +22,13 @@ ID, or personal project information.
 
 - Streaming assistant text, reasoning, tool calls, tool results, and
   Codex-style `[Image #N]` placeholders for image output/history.
-- Native rc.8 image input through repeatable `--image`/`-i` startup flags or
+- Native rc.1 image input through repeatable `--image`/`-i` startup flags or
   `/image` for the next prompt; pasted image paths are attached automatically,
-  and Ctrl+V reads a copied Finder file or bitmap on macOS. Pending images use
+  and Ctrl+V reads a copied Finder file or bitmap on macOS. This is the Control
+  key, not Command/⌘V: Terminal does not forward a bitmap-only Command+V paste
+  to the TUI process. Pending images use
   `[Image #N]` placeholders while attachment bytes remain in DSH's local store.
-  Before sending, the TUI uses rc.8's model-capability preflight and retains
+  Before sending, the TUI uses rc.1's model-capability preflight and retains
   the pending batch when the selected model is explicitly text-only.
 - Bordered TTY composer with command completion, history, resize reflow, and a
   plain line-loop fallback when stdin/stdout are pipes.
@@ -40,7 +42,7 @@ ID, or personal project information.
 
 ## Install
 
-Requires DeepSeek Harness `0.1.0-rc.8` or a compatible later build.
+Requires DeepSeek Harness `0.1.1-rc.1` or a compatible later build.
 
 ```sh
 dsh plugin --profile tui add github:yhfgyyf/dsh-tui-app
@@ -74,9 +76,9 @@ Local commands include `/help`, `/image`, `/sessions`, `/resume`, `/preset`,
 `/new`, `/model`, `/effort`, and `/exit`. `/image a.png,b.jpg` attaches images
 to the next prompt and `/image clear` removes the pending batch. `/model` lists
 models from every configured provider; `/model <provider>/<id>` switches routes.
-The shipped
-DeepSeek V4 Flash/Pro routes are text-only; use an image-capable model configured
-through DSH's official provider settings before sending. DSH application commands such as `/compact`,
+The shipped DeepSeek V4 Flash/Pro routes are text-only; rc.1 adds the official
+`deepseek-v4-flash-vision-exp` image model. Select that model, or another route
+that declares image input, before sending. DSH application commands such as `/compact`,
 `/goal`, `/feedback`, and `/export` are merged from the shared command
 registry when their providers are composed.
 
