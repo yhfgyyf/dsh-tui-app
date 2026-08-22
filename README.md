@@ -37,8 +37,8 @@ ID, or personal project information.
   model-loop turn.
 - Model and reasoning-effort pickers, plus permission-preset cycling with
   Shift+Tab.
-- DSH slash-command registry integration and an explicit `!<command>` local
-  shell shortcut.
+- DSH slash-command registry and user-invocable Skill integration, plus an
+  explicit `!<command>` local shell shortcut.
 
 ## Install
 
@@ -81,6 +81,14 @@ The shipped DeepSeek V4 Flash/Pro routes are text-only; rc.1 adds the official
 that declares image input, before sending. DSH application commands such as `/compact`,
 `/goal`, `/feedback`, and `/export` are merged from the shared command
 registry when their providers are composed.
+
+User-invocable skills from the active Agent Preset also appear in the `/` menu.
+Type `/skill-name`, or select it and press Tab to insert `/skill-name `, then add
+the task and send it. The literal prompt is passed to DSH unchanged so the
+official `agent/pre-step` skill path injects the canonical skill content, just
+as it does in Web. Skills marked model-disabled remain available with a
+`user-only` label; skills marked user-disabled are hidden. If a host command
+and a skill share a name, the host command takes precedence.
 
 Main keys: Enter sends, Up/Down navigate history or pickers, Tab completes,
 Shift+Tab cycles permission presets, Ctrl+V pastes a clipboard image on macOS,

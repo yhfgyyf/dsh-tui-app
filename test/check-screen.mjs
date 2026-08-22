@@ -410,5 +410,49 @@ console.log('\n[15] multi-provider model catalog')
     internals.modelCatalogMatches?.(groups, 'shared')?.length === 2)
 }
 
+// ── 16. user-invocable skill slash entries ────────────────────────────────
+console.log('\n[16] user-invocable skill slash entries')
+{
+  const summaries = [
+    { name: 'review-code', description: 'Review a change', invocation: { userInvocable: true, modelInvocable: true } },
+    { name: 'write-release', description: 'Write release notes', invocation: { userInvocable: true, modelInvocable: false } },
+    { name: 'hidden-skill', description: 'Model only', invocation: { userInvocable: false, modelInvocable: true } },
+    { name: 'help', description: 'Collides with local help', invocation: { userInvocable: true, modelInvocable: true } },
+    { name: 'compact', description: 'Collides with host command', invocation: { userInvocable: true, modelInvocable: true } }
+  ]
+  const commands = {
+    list: () => [{ name: 'compact', description: 'Compact context', input: undefined }]
+  }
+  const items = internals.mergedMenuCommands?.(commands, {}, summaries) ?? []
+  check('user-invocable skills join the slash menu',
+    items.some((item) => item.name === '/review-code'))
+  check('model-disabled skill stays available with user-only marker',
+    items.some((item) => item.name === '/write-release' && item.desc.startsWith('user-only · ')))
+  check('user-disabled skill is hidden',
+    !items.some((item) => item.name === '/hidden-skill'))
+  check('local and host commands win same-name skill collisions',
+    items.filter((item) => item.name === '/help').length === 1
+      && items.filter((item) => item.name === '/compact').length === 1
+      && items.find((item) => item.name === '/compact')?.desc === 'Compact context')
+  check('gesture parser matches whitespace-bounded skill references',
+    JSON.stringify(internals.invokedSkillNames?.('/review-code inspect /write-release'))
+      === JSON.stringify(['review-code', 'write-release'])
+      && internals.invokedSkillNames?.('/usr/bin 5/8').length === 0)
+  check('only a known user-invocable gesture is admitted as a skill prompt',
+    internals.hasUserInvocableSkill?.(summaries, '/review-code inspect') === true
+      && internals.hasUserInvocableSkill?.(summaries, '/hidden-skill inspect') === false
+      && internals.hasUserInvocableSkill?.(summaries, '/unknown inspect') === false)
+
+  const term = new Term(COLS, ROWS)
+  const io = { stdout: { write: (chunk) => term.write(chunk) }, stderr: process.stderr }
+  const screen = makeScreen(io, { model: 'm', effort: 'e', permission: 'p', step: 0, in: 0, out: 0, cache: 0, cwd: '/tmp', sessionId: 's' }, items)
+  screen.draw()
+  screen.insert('/review')
+  screen.completeTab()
+  const inputLine = term.screen().find((row) => row.includes('❯'))
+  check('Tab inserts the Web-style skill prompt with a trailing space',
+    inputLine?.includes('/review-code ') ?? false, inputLine)
+}
+
 console.log(failures === 0 ? '\nALL CHECKS PASSED' : `\n${failures} CHECK(S) FAILED`)
 process.exit(failures === 0 ? 0 : 1)

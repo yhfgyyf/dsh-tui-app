@@ -32,7 +32,8 @@
 - 基于 DSH 持久会话存储的新建、恢复、列表与删除流程。
 - 空白会话可选择 Agent Preset；第一次模型回合开始后锁定，不能中途切换。
 - 模型与推理强度选择器，Shift+Tab 循环权限 preset。
-- 合并 DSH slash-command 注册表，并提供显式的 `!<command>` 本地 shell 快捷方式。
+- 合并 DSH slash-command 注册表和用户可调用的 Skill，并提供显式的
+  `!<command>` 本地 shell 快捷方式。
 
 ## 安装
 
@@ -73,6 +74,12 @@ prompt，`/image clear` 清除待发送图片。`/model` 会列出所有已配�
 纯文本的；rc.1 新增官方 `deepseek-v4-flash-vision-exp` 图片模型，发送前应选择该模型
 或其他明确声明图片输入能力的路由。当相应 provider 已组装时，`/compact`、
 `/goal`、`/feedback`、`/export` 等 DSH 应用命令会从共享注册表自动加入。
+
+当前 Agent Preset 中允许用户调用的 Skill 也会加入 `/` 菜单。可直接输入
+`/skill-name`，或选中后按 Tab 补全为 `/skill-name `，再填写任务并发送。TUI 会把
+包含该字面量的 prompt 原样交给 DSH，由官方 `agent/pre-step` 路径注入标准 Skill
+内容，行为与 Web 一致。禁止模型调用但允许用户调用的 Skill 会标注为
+`user-only`；禁止用户调用的 Skill 不显示。若宿主命令与 Skill 同名，宿主命令优先。
 
 主要按键：Enter 发送，↑/↓ 浏览历史或选择项目，Tab 补全，Shift+Tab 循环权限，
 macOS 上按 Control+V（不是 Command/⌘V）粘贴剪贴板图片，Esc 中断或关闭菜单，
