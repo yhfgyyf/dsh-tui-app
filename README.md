@@ -39,6 +39,10 @@ ID, or personal project information.
   Shift+Tab.
 - DSH slash-command registry and user-invocable Skill integration, plus an
   explicit `!<command>` local shell shortcut.
+- Optional Guardian integration: each audit appears as a separate green or red
+  transcript block and never becomes an agent message. A paused Guardian uses
+  `c` to copy its feedback through OSC 52, `r` to resume, and Esc/Ctrl+C to
+  stop.
 
 ## Install
 
@@ -70,6 +74,14 @@ dsh plugin --profile tui add github:yhfgyyf/dsh-auto-preset-router
 dsh --profile tui --preset auto
 ```
 
+To add the explicit fifth Guardian preset and its persistent Codex review,
+install the Guardian bundle too. It does not become an Auto Router target:
+
+```sh
+dsh plugin --profile tui add github:yhfgyyf/dsh-guardian-mode
+dsh --profile tui --preset guardian
+```
+
 ## Commands and keys
 
 Local commands include `/help`, `/image`, `/sessions`, `/resume`, `/preset`,
@@ -81,6 +93,7 @@ The shipped DeepSeek V4 Flash/Pro routes are text-only; rc.1 adds the official
 that declares image input, before sending. DSH application commands such as `/compact`,
 `/goal`, `/feedback`, and `/export` are merged from the shared command
 registry when their providers are composed.
+Guardian adds `/guardian status|now|history|resume` through that same registry.
 
 User-invocable skills from the active Agent Preset also appear in the `/` menu.
 Type `/skill-name`, or select it and press Tab to insert `/skill-name `, then add
@@ -93,6 +106,8 @@ and a skill share a name, the host command takes precedence.
 Main keys: Enter sends, Up/Down navigate history or pickers, Tab completes,
 Shift+Tab cycles permission presets, Ctrl+V pastes a clipboard image on macOS,
 Esc interrupts/closes, Ctrl+L clears, and Ctrl+D exits.
+While Guardian is paused and the composer is empty, `c` copies the latest
+feedback and `r` resumes the guarded task.
 
 ## Security boundary
 

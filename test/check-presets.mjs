@@ -24,7 +24,8 @@ function extractFunction(name) {
 const helpers = new Function(`
   ${extractFunction('resolvePreset')}
   ${extractFunction('sessionBlank')}
-  return { resolvePreset, sessionBlank }
+  ${extractFunction('guardianFeedback')}
+  return { resolvePreset, sessionBlank, guardianFeedback }
 `)()
 
 assert.equal(helpers.sessionBlank({ events: [] }), true)
@@ -48,6 +49,31 @@ assert.equal(helpers.resolvePreset({
   meta: { agentPreset: 'auto' },
   events: [{ type: 'agent-preset/selected', data: { agentPreset: 'cordis' } }]
 }), 'cordis')
+
+assert.match(startupSource, /--preset guardian/u)
+assert.match(startupSource, /auto\/guardian when installed/u)
+
+const guardianPass = helpers.guardianFeedback({
+  active: true,
+  auditSequence: 1,
+  traceCursor: 9,
+  paused: false,
+  lastAudit: { id: 'audit-pass', sequence: 1, verdict: 'pass', durationMs: 42, traceFrom: 2, traceTo: 9, summary: 'on track', findings: [] }
+})
+assert.equal(guardianPass.tone, 'success')
+assert.match(guardianPass.text, /Guardian #1 · PASS/u)
+assert.match(guardianPass.text, /audit audit-pass · trace 2→9/u)
+
+const guardianCritical = helpers.guardianFeedback({
+  active: true,
+  paused: true,
+  lastAudit: { id: 'audit-critical', sequence: 2, verdict: 'critical', durationMs: 99, findings: [{ recommendation: 'repair the dispatch guard' }] }
+})
+assert.equal(guardianCritical.tone, 'error')
+assert.match(guardianCritical.text, /repair the dispatch guard/u)
+assert.match(guardianCritical.text, /c copy feedback · r resume/u)
+assert.match(source, /guardianView\?\.paused === true && name === 'c'/u)
+assert.match(source, /guardianView\?\.paused === true && name === 'r'/u)
 
 const collectorStart = startupSource.indexOf('export function collectImagePaths(')
 assert.notEqual(collectorStart, -1, 'missing collectImagePaths in lib/startup.js')
