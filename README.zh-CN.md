@@ -34,8 +34,9 @@
 - 模型与推理强度选择器，Shift+Tab 循环权限 preset。
 - 合并 DSH slash-command 注册表和用户可调用的 Skill，并提供显式的
   `!<command>` 本地 shell 快捷方式。
-- 可选集成 Guardian：每轮审计使用独立绿色或红色输出块，不会成为 Agent 消息。
-  暂停状态下 `c` 通过 OSC 52 复制反馈，`r` 恢复，Esc/Ctrl+C 停止。
+- 可选集成 Guardian：未批准审计使用独立绿色或红色输出块；warning 默认不打断
+  Agent。空输入框按 `a` 接受修复，critical 会先暂停再等待批准；只有已批准的
+  修复 prompt/Skill 会追加到 Agent 上下文尾部。暂停时 `c` 通过 OSC 52 复制反馈。
 
 ## 安装
 
@@ -84,7 +85,7 @@ prompt，`/image clear` 清除待发送图片。`/model` 会列出所有已配�
 纯文本的；rc.1 新增官方 `deepseek-v4-flash-vision-exp` 图片模型，发送前应选择该模型
 或其他明确声明图片输入能力的路由。当相应 provider 已组装时，`/compact`、
 `/goal`、`/feedback`、`/export` 等 DSH 应用命令会从共享注册表自动加入。
-Guardian 通过同一注册表增加 `/guardian status|now|history|resume`。
+Guardian 通过同一注册表增加 `/guardian status|now|history|accept|resume`。
 
 当前 Agent Preset 中允许用户调用的 Skill 也会加入 `/` 菜单。可直接输入
 `/skill-name`，或选中后按 Tab 补全为 `/skill-name `，再填写任务并发送。TUI 会把
@@ -95,7 +96,8 @@ Guardian 通过同一注册表增加 `/guardian status|now|history|resume`。
 主要按键：Enter 发送，↑/↓ 浏览历史或选择项目，Tab 补全，Shift+Tab 循环权限，
 macOS 上按 Control+V（不是 Command/⌘V）粘贴剪贴板图片，Esc 中断或关闭菜单，
 Ctrl+L 清屏，Ctrl+D 退出。
-Guardian 暂停且输入框为空时，按 `c` 复制最新反馈，按 `r` 恢复守护任务。
+Guardian 有待处理审核且输入框为空时，按 `a` 接受修复；暂停时按 `c` 复制最新
+反馈。`r` 只恢复没有待批准 critical 的失败/手工暂停。
 
 ## 安全边界
 

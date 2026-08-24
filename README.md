@@ -39,10 +39,11 @@ ID, or personal project information.
   Shift+Tab.
 - DSH slash-command registry and user-invocable Skill integration, plus an
   explicit `!<command>` local shell shortcut.
-- Optional Guardian integration: each audit appears as a separate green or red
-  transcript block and never becomes an agent message. A paused Guardian uses
-  `c` to copy its feedback through OSC 52, `r` to resume, and Esc/Ctrl+C to
-  stop.
+- Optional Guardian integration: unaccepted audits appear as separate green or
+  red transcript blocks; warnings do not interrupt the Agent. With an empty
+  composer, `a` accepts remediation, while critical pauses first and waits for
+  approval. Only accepted repair prompts/skills are appended at the context
+  tail. A paused Guardian uses `c` to copy feedback through OSC 52.
 
 ## Install
 
@@ -93,7 +94,7 @@ The shipped DeepSeek V4 Flash/Pro routes are text-only; rc.1 adds the official
 that declares image input, before sending. DSH application commands such as `/compact`,
 `/goal`, `/feedback`, and `/export` are merged from the shared command
 registry when their providers are composed.
-Guardian adds `/guardian status|now|history|resume` through that same registry.
+Guardian adds `/guardian status|now|history|accept|resume` through that same registry.
 
 User-invocable skills from the active Agent Preset also appear in the `/` menu.
 Type `/skill-name`, or select it and press Tab to insert `/skill-name `, then add
@@ -106,8 +107,9 @@ and a skill share a name, the host command takes precedence.
 Main keys: Enter sends, Up/Down navigate history or pickers, Tab completes,
 Shift+Tab cycles permission presets, Ctrl+V pastes a clipboard image on macOS,
 Esc interrupts/closes, Ctrl+L clears, and Ctrl+D exits.
-While Guardian is paused and the composer is empty, `c` copies the latest
-feedback and `r` resumes the guarded task.
+With a pending Guardian review and an empty composer, `a` accepts remediation;
+while paused, `c` copies the latest feedback. `r` resumes only a failure/manual
+pause that has no pending critical approval.
 
 ## Security boundary
 

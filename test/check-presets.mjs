@@ -67,13 +67,32 @@ assert.match(guardianPass.text, /audit audit-pass · trace 2→9/u)
 const guardianCritical = helpers.guardianFeedback({
   active: true,
   paused: true,
+  pendingApproval: { auditId: 'audit-critical', verdict: 'critical', status: 'pending' },
   lastAudit: { id: 'audit-critical', sequence: 2, verdict: 'critical', durationMs: 99, findings: [{ recommendation: 'repair the dispatch guard' }] }
 })
 assert.equal(guardianCritical.tone, 'error')
 assert.match(guardianCritical.text, /repair the dispatch guard/u)
-assert.match(guardianCritical.text, /c copy feedback · r resume/u)
+assert.match(guardianCritical.text, /a accept repair · c copy feedback/u)
+const guardianWarning = helpers.guardianFeedback({
+  active: true,
+  paused: false,
+  pendingApproval: { auditId: 'audit-warning', verdict: 'warning', status: 'pending' },
+  lastAudit: { id: 'audit-warning', sequence: 3, verdict: 'warning', durationMs: 50, findings: [{ recommendation: 'tighten the check' }] }
+})
+assert.match(guardianWarning.text, /current agent continues without approval/u)
+const guardianRetry = helpers.guardianFeedback({
+  active: true,
+  paused: true,
+  pendingApproval: { auditId: 'audit-critical', verdict: 'critical', status: 'accepted' },
+  remediation: { id: 'remediation-audit-critical', auditId: 'audit-critical', phase: 'execution-failed' },
+  lastAudit: { id: 'audit-critical', sequence: 2, verdict: 'critical', durationMs: 99, findings: [] }
+})
+assert.match(guardianRetry.text, /a retry repair/u)
+assert.match(source, /guardians\.accept/u)
+assert.match(source, /name === 'a'/u)
 assert.match(source, /guardianView\?\.paused === true && name === 'c'/u)
-assert.match(source, /guardianView\?\.paused === true && name === 'r'/u)
+assert.match(source, /remediation\.phase === 'completed'/u)
+assert.match(source, /pendingApproval\?\.verdict !== 'critical' && name === 'r'/u)
 
 const collectorStart = startupSource.indexOf('export function collectImagePaths(')
 assert.notEqual(collectorStart, -1, 'missing collectImagePaths in lib/startup.js')
