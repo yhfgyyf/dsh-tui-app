@@ -33,7 +33,11 @@ for (const dependency of [
 
 for (const [dependency, range] of Object.entries(manifest.peerDependencies)) {
   if (dependency.startsWith('@deepseek-ai/dsh-')) {
-    assert.equal(range, '^0.1.1-rc.1', `${dependency} must target the current DSH rc.1 line`)
+    assert.equal(
+      range,
+      '^0.1.1-rc.1 || ^0.1.2-alpha.2',
+      `${dependency} must target the supported DSH rc.1 and alpha.2 lines`
+    )
   }
 }
 
