@@ -79,6 +79,11 @@
 # ── the interactive terminal app ────────────────────────────────────────────
 
 - insert:
+    # Alpha.2 standard/PTC/Cordis presets require this Host-owned provider for
+    # subagent model-selection policy, matching the official Web composition.
+    - id: subagent-model-selection-settings
+      name: '@deepseek-ai/dsh-tool-subagent/model-selection-settings'
+
     # PTC mode presents the preset's tools through run_code and requires this
     # host-plane worker. Other presets leave it idle.
     - id: code-runtime
@@ -97,6 +102,14 @@
       name: '@deepseek-ai/dsh-agent-presets'
       config:
         default: standard
+
+    # Match the official Web composition for session deletion. The controller
+    # owns workspace detachment, lifecycle checks, and persisted removal.
+    - id: workspace
+      name: '@deepseek-ai/dsh-workspace'
+
+    - id: session-controller
+      name: '@deepseek-ai/dsh-api-session-controller'
 
     - id: tui-startup
       name: 'dsh-tui-app/startup'

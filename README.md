@@ -32,7 +32,9 @@ ID, or personal project information.
   the pending batch when the selected model is explicitly text-only.
 - Bordered TTY composer with command completion, history, resize reflow, and a
   plain line-loop fallback when stdin/stdout are pipes.
-- New, resume, list, and delete session flows over DSH's durable session store.
+- New, resume, list, and delete session flows over DSH's durable session store;
+  deletion goes through the official SessionController so workspace registration
+  is cleaned up and sessions owned by another lifecycle are rejected safely.
 - Blank-session Agent Preset selection; the preset is locked after the first
   model-loop turn.
 - Model and reasoning-effort pickers, plus permission-preset cycling with

@@ -14,6 +14,12 @@ assert.equal(manifest.dsh.bundle.patch, './cordis.patch.yml')
 assert.match(patch, /^\s*- id: agent-presets/mu)
 assert.match(patch, /^\s*default: standard/mu)
 assert.match(patch, /^\s*- id: tui-startup/mu)
+assert.match(patch, /^\s*- id: subagent-model-selection-settings/mu)
+assert.match(patch, /^\s*name: '@deepseek-ai\/dsh-tool-subagent\/model-selection-settings'/mu)
+assert.match(patch, /^\s*- id: workspace/mu)
+assert.match(patch, /^\s*name: '@deepseek-ai\/dsh-workspace'/mu)
+assert.match(patch, /^\s*- id: session-controller/mu)
+assert.match(patch, /^\s*name: '@deepseek-ai\/dsh-api-session-controller'/mu)
 assert.match(patch, /^\s*name: 'dsh-tui-app\/startup'/mu)
 assert.match(patch, /^\s*- id: tui-runner/mu)
 assert.match(patch, /^\s*name: 'dsh-tui-app'/mu)
@@ -22,9 +28,12 @@ assert.match(patch, /^\s*images: !!js ctx\.tuiStartup\.images \?\? \[\]/mu)
 for (const dependency of [
   '@deepseek-ai/dsh-agent',
   '@deepseek-ai/dsh-agent-presets',
+  '@deepseek-ai/dsh-api-session-controller',
   '@deepseek-ai/dsh-cmdline',
   '@deepseek-ai/dsh-llm',
   '@deepseek-ai/dsh-session',
+  '@deepseek-ai/dsh-tool-subagent',
+  '@deepseek-ai/dsh-workspace',
   '@deepseek-ai/schemastery',
   'commander'
 ]) {
