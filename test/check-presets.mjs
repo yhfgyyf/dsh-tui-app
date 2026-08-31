@@ -72,14 +72,14 @@ const guardianCritical = helpers.guardianFeedback({
 })
 assert.equal(guardianCritical.tone, 'error')
 assert.match(guardianCritical.text, /repair the dispatch guard/u)
-assert.match(guardianCritical.text, /a accept repair · c copy feedback/u)
+assert.match(guardianCritical.text, /a execute now · e edit & execute now/u)
 const guardianWarning = helpers.guardianFeedback({
   active: true,
   paused: false,
   pendingApproval: { auditId: 'audit-warning', verdict: 'warning', status: 'pending' },
   lastAudit: { id: 'audit-warning', sequence: 3, verdict: 'warning', durationMs: 50, findings: [{ recommendation: 'tighten the check' }] }
 })
-assert.match(guardianWarning.text, /current agent continues without approval/u)
+assert.match(guardianWarning.text, /e edit & execute · runs after current tool call/u)
 const guardianRetry = helpers.guardianFeedback({
   active: true,
   paused: true,
@@ -87,9 +87,12 @@ const guardianRetry = helpers.guardianFeedback({
   remediation: { id: 'remediation-audit-critical', auditId: 'audit-critical', phase: 'execution-failed' },
   lastAudit: { id: 'audit-critical', sequence: 2, verdict: 'critical', durationMs: 99, findings: [] }
 })
-assert.match(guardianRetry.text, /a retry repair/u)
+assert.match(guardianRetry.text, /a retry · e edit & retry/u)
 assert.match(source, /guardians\.accept/u)
 assert.match(source, /name === 'a'/u)
+assert.match(source, /name === 'e'/u)
+assert.match(source, /screen\.setBuffer\(editableText\)/u)
+assert.match(source, /acceptGuardian\(editedText, edit\.auditId\)/u)
 assert.match(source, /guardianView\?\.paused === true && name === 'c'/u)
 assert.match(source, /remediation\.phase === 'completed'/u)
 assert.match(source, /pendingApproval\?\.verdict !== 'critical' && name === 'r'/u)

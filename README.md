@@ -40,10 +40,11 @@ ID, or personal project information.
 - DSH slash-command registry and user-invocable Skill integration, plus an
   explicit `!<command>` local shell shortcut.
 - Optional Guardian integration: unaccepted audits appear as separate green or
-  red transcript blocks; warnings do not interrupt the Agent. With an empty
-  composer, `a` accepts remediation, while critical pauses first and waits for
-  approval. Only accepted repair prompts/skills are appended at the context
-  tail. A paused Guardian uses `c` to copy feedback through OSC 52.
+  red transcript blocks. `a` executes the proposal unchanged; `e` loads it into
+  the composer for editing and Enter executes it. Warning is steered after the
+  current tool call without canceling the Agent; critical is already paused and
+  starts its accepted repair immediately. A paused Guardian uses `c` to copy
+  feedback through OSC 52.
 
 ## Install
 
@@ -107,8 +108,9 @@ and a skill share a name, the host command takes precedence.
 Main keys: Enter sends, Up/Down navigate history or pickers, Tab completes,
 Shift+Tab cycles permission presets, Ctrl+V pastes a clipboard image on macOS,
 Esc interrupts/closes, Ctrl+L clears, and Ctrl+D exits.
-With a pending Guardian review and an empty composer, `a` accepts remediation;
-while paused, `c` copies the latest feedback. `r` resumes only a failure/manual
+With a pending Guardian review and an empty composer, `a` executes remediation
+unchanged and `e` opens an editable draft; Enter executes it and Esc cancels.
+While paused, `c` copies the latest feedback. `r` resumes only a failure/manual
 pause that has no pending critical approval.
 
 ## Security boundary

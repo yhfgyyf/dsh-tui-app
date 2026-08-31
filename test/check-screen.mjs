@@ -118,6 +118,16 @@ console.log('\n[2] typing five characters')
   dump(term, 'after typing "hello"')
 }
 
+console.log('\n[2b] replacing the composer with an editable Guardian draft')
+{
+  const { term, screen } = newScreen()
+  screen.draw()
+  screen.setBuffer('repair the dispatch guard')
+  const inputLine = term.screen().find((row) => row.includes('❯'))
+  check('Guardian draft replaces the composer', inputLine?.includes('repair the dispatch guard') ?? false, inputLine)
+  check('cursor follows the replacement draft', term.x === 4 + 'repair the dispatch guard'.length, `x=${term.x}`)
+}
+
 // ── 3. slash menu ───────────────────────────────────────────────────────────
 console.log('\n[3] slash menu open/close')
 {

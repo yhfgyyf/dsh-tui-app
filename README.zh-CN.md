@@ -34,9 +34,10 @@
 - 模型与推理强度选择器，Shift+Tab 循环权限 preset。
 - 合并 DSH slash-command 注册表和用户可调用的 Skill，并提供显式的
   `!<command>` 本地 shell 快捷方式。
-- 可选集成 Guardian：未批准审计使用独立绿色或红色输出块；warning 默认不打断
-  Agent。空输入框按 `a` 接受修复，critical 会先暂停再等待批准；只有已批准的
-  修复 prompt/Skill 会追加到 Agent 上下文尾部。暂停时 `c` 通过 OSC 52 复制反馈。
+- 可选集成 Guardian：未批准审计使用独立绿色或红色输出块；`a` 原样执行，`e`
+  将意见载入输入框，编辑后按 Enter 执行。warning 不取消主 Agent，而是在当前
+  tool call 结束后 steering 执行；critical 已暂停，批准后立即执行。暂停时 `c`
+  通过 OSC 52 复制反馈。
 
 ## 安装
 
@@ -96,8 +97,9 @@ Guardian 通过同一注册表增加 `/guardian status|now|history|accept|resume
 主要按键：Enter 发送，↑/↓ 浏览历史或选择项目，Tab 补全，Shift+Tab 循环权限，
 macOS 上按 Control+V（不是 Command/⌘V）粘贴剪贴板图片，Esc 中断或关闭菜单，
 Ctrl+L 清屏，Ctrl+D 退出。
-Guardian 有待处理审核且输入框为空时，按 `a` 接受修复；暂停时按 `c` 复制最新
-反馈。`r` 只恢复没有待批准 critical 的失败/手工暂停。
+Guardian 有待处理审核且输入框为空时，按 `a` 原样执行，或按 `e` 编辑后 Enter
+执行（Esc 取消）；暂停时按 `c` 复制最新反馈。`r` 只恢复没有待批准 critical
+的失败/手工暂停。
 
 ## 安全边界
 
