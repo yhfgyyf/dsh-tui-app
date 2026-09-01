@@ -52,6 +52,10 @@ assert.equal(helpers.resolvePreset({
 
 assert.match(startupSource, /--preset guardian/u)
 assert.match(startupSource, /auto\/guardian when installed/u)
+assert.match(startupSource, /--video <path>/u)
+assert.match(source, /case 'video\/mp4'|return 'video\/mp4'/u)
+assert.match(source, /name: '\/video'/u)
+assert.match(source, /\[\$\{video \? 'Video' : 'Image'\} #\$\{index\}\]/u)
 
 const guardianPass = helpers.guardianFeedback({
   active: true,
@@ -116,5 +120,6 @@ for (let index = collectorBody; index < startupSource.length; index += 1) {
 const collectorSource = startupSource.slice(collectorStart, collectorEnd).replace(/^export /, '')
 const collectImagePaths = new Function(`${collectorSource}; return collectImagePaths`)()
 assert.deepEqual(collectImagePaths('a.png,b.jpg', ['first.webp']), ['first.webp', 'a.png', 'b.jpg'])
+assert.deepEqual(collectImagePaths('clip.mp4', []), ['clip.mp4'])
 
 console.log('preset lock, durable selection, and repeatable image flag checks passed')

@@ -30,6 +30,9 @@ ID, or personal project information.
   `[Image #N]` placeholders while attachment bytes remain in DSH's local store.
   Before sending, the TUI uses rc.1's model-capability preflight and retains
   the pending batch when the selected model is explicitly text-only.
+- Direct MP4 input through repeatable `--video`/`-v`, `/video`, pasted paths,
+  or a copied Finder file. Original video bytes are sent to a compatible
+  OpenAI `video_url` endpoint without local frame extraction.
 - Bordered TTY composer with command completion, history, resize reflow, and a
   plain line-loop fallback when stdin/stdout are pipes.
 - New, resume, list, and delete session flows over DSH's durable session store;
@@ -88,7 +91,7 @@ dsh --profile tui --preset guardian
 
 ## Commands and keys
 
-Local commands include `/help`, `/image`, `/sessions`, `/resume`, `/preset`,
+Local commands include `/help`, `/image`, `/video`, `/sessions`, `/resume`, `/preset`,
 `/new`, `/model`, `/effort`, and `/exit`. `/image a.png,b.jpg` attaches images
 to the next prompt and `/image clear` removes the pending batch. `/model` lists
 models from every configured provider; `/model <provider>/<id>` switches routes.

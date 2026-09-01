@@ -4,7 +4,7 @@
 # overlays still to come.
 #
 # The tui-startup plugin injects `cmdlineArgs` and provides `tuiStartup` as an
-# ordinary Cordis service (parsed flags: --resume <id>, --preset <id>, --image <path>). The tui-runner row
+# ordinary Cordis service (parsed flags: --resume <id>, --preset <id>, --image <path>, --video <path>). The tui-runner row
 # below injects that service, so the Loader resolves its expressions only
 # after the flags are parsed. `dsh --profile tui --help` provides no
 # tuiStartup, so nothing binds and the process exits after printing help.
@@ -122,3 +122,4 @@
         resume: !!js ctx.tuiStartup.resume ?? undefined
         preset: !!js ctx.tuiStartup.preset ?? undefined
         images: !!js ctx.tuiStartup.images ?? []
+        videos: !!js ctx.tuiStartup.videos ?? []

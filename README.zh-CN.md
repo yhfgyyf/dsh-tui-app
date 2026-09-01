@@ -27,6 +27,8 @@
   纯图片的 Command+V 粘贴传给 TUI 进程。待发送图片显示为 `[Image #N]`，图片字节
   保留在 DSH rc.1 的本地附件存储中。发送前会执行与 Web 相同的 rc.1 模型能力预检；当前模型明确
   为纯文本时保留待发送图片，不会启动模型回合。
+- 通过可重复的 `--video`/`-v`、`/video`、粘贴路径或 Finder 复制文件直接附加 MP4；
+  原始视频字节会作为 OpenAI `video_url` 发送给兼容模型，不在本地抽帧。
 - TTY 下提供固定边框输入框、命令补全、历史记录与窗口缩放重排；管道输入输出时
   自动退化为普通逐行循环。
 - 基于 DSH 持久会话存储的新建、恢复、列表与删除流程；删除统一通过官方
@@ -80,7 +82,7 @@ dsh --profile tui --preset guardian
 
 ## 命令与按键
 
-本地命令包括 `/help`、`/image`、`/sessions`、`/resume`、`/preset`、`/new`、
+本地命令包括 `/help`、`/image`、`/video`、`/sessions`、`/resume`、`/preset`、`/new`、
 `/model`、`/effort` 和 `/exit`。`/image a.png,b.jpg` 会把图片附加到下一条
 prompt，`/image clear` 清除待发送图片。`/model` 会列出所有已配置 provider 的模型，
 也可用 `/model <provider>/<id>` 切换路由。官方自带的 DeepSeek V4 Flash/Pro 路由是
