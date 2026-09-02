@@ -118,14 +118,14 @@ console.log('\n[2] typing five characters')
   dump(term, 'after typing "hello"')
 }
 
-console.log('\n[2b] replacing the composer with an editable Guardian draft')
+console.log('\n[2b] replacing the composer with an editable Audit draft')
 {
   const { term, screen } = newScreen()
   screen.draw()
-  screen.setBuffer('repair the dispatch guard')
+  screen.setBuffer('repair the dispatch check')
   const inputLine = term.screen().find((row) => row.includes('❯'))
-  check('Guardian draft replaces the composer', inputLine?.includes('repair the dispatch guard') ?? false, inputLine)
-  check('cursor follows the replacement draft', term.x === 4 + 'repair the dispatch guard'.length, `x=${term.x}`)
+  check('Audit draft replaces the composer', inputLine?.includes('repair the dispatch check') ?? false, inputLine)
+  check('cursor follows the replacement draft', term.x === 4 + 'repair the dispatch check'.length, `x=${term.x}`)
 }
 
 // ── 3. slash menu ───────────────────────────────────────────────────────────

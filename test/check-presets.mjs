@@ -22,10 +22,11 @@ function extractFunction(name) {
 }
 
 const helpers = new Function(`
+  ${extractFunction('sessionEvents')}
   ${extractFunction('resolvePreset')}
   ${extractFunction('sessionBlank')}
-  ${extractFunction('guardianFeedback')}
-  return { resolvePreset, sessionBlank, guardianFeedback }
+  ${extractFunction('auditFeedback')}
+  return { sessionEvents, resolvePreset, sessionBlank, auditFeedback }
 `)()
 
 assert.equal(helpers.sessionBlank({ events: [] }), true)
@@ -33,6 +34,7 @@ assert.equal(helpers.sessionBlank({ events: [
   { type: 'agent-preset/selected', data: { agentPreset: 'minimal' } }
 ] }), true)
 assert.equal(helpers.sessionBlank({ events: [{ type: 'turn/start', data: {} }] }), false)
+assert.equal(helpers.sessionBlank({ snapshotEvents: () => [{ type: 'turn/start', data: {} }] }), false)
 
 assert.equal(helpers.resolvePreset({
   meta: { agentPreset: 'standard' },
@@ -50,54 +52,54 @@ assert.equal(helpers.resolvePreset({
   events: [{ type: 'agent-preset/selected', data: { agentPreset: 'cordis' } }]
 }), 'cordis')
 
-assert.match(startupSource, /--preset guardian/u)
-assert.match(startupSource, /auto\/guardian when installed/u)
+assert.match(startupSource, /--preset audit/u)
+assert.match(startupSource, /auto\/audit when installed/u)
 assert.match(startupSource, /--video <path>/u)
 assert.match(source, /case 'video\/mp4'|return 'video\/mp4'/u)
 assert.match(source, /name: '\/video'/u)
 assert.match(source, /\[\$\{video \? 'Video' : 'Image'\} #\$\{index\}\]/u)
 
-const guardianPass = helpers.guardianFeedback({
+const auditPass = helpers.auditFeedback({
   active: true,
   auditSequence: 1,
   traceCursor: 9,
   paused: false,
   lastAudit: { id: 'audit-pass', sequence: 1, verdict: 'pass', durationMs: 42, traceFrom: 2, traceTo: 9, summary: 'on track', findings: [] }
 })
-assert.equal(guardianPass.tone, 'success')
-assert.match(guardianPass.text, /Guardian #1 · PASS/u)
-assert.match(guardianPass.text, /audit audit-pass · trace 2→9/u)
+assert.equal(auditPass.tone, 'success')
+assert.match(auditPass.text, /Audit #1 · PASS/u)
+assert.match(auditPass.text, /audit audit-pass · trace 2→9/u)
 
-const guardianCritical = helpers.guardianFeedback({
+const auditCritical = helpers.auditFeedback({
   active: true,
   paused: true,
   pendingApproval: { auditId: 'audit-critical', verdict: 'critical', status: 'pending' },
-  lastAudit: { id: 'audit-critical', sequence: 2, verdict: 'critical', durationMs: 99, findings: [{ recommendation: 'repair the dispatch guard' }] }
+  lastAudit: { id: 'audit-critical', sequence: 2, verdict: 'critical', durationMs: 99, findings: [{ recommendation: 'repair the dispatch check' }] }
 })
-assert.equal(guardianCritical.tone, 'error')
-assert.match(guardianCritical.text, /repair the dispatch guard/u)
-assert.match(guardianCritical.text, /a execute now · e edit & execute now/u)
-const guardianWarning = helpers.guardianFeedback({
+assert.equal(auditCritical.tone, 'error')
+assert.match(auditCritical.text, /repair the dispatch check/u)
+assert.match(auditCritical.text, /a execute now · e edit & execute now/u)
+const auditWarning = helpers.auditFeedback({
   active: true,
   paused: false,
   pendingApproval: { auditId: 'audit-warning', verdict: 'warning', status: 'pending' },
   lastAudit: { id: 'audit-warning', sequence: 3, verdict: 'warning', durationMs: 50, findings: [{ recommendation: 'tighten the check' }] }
 })
-assert.match(guardianWarning.text, /e edit & execute · runs after current tool call/u)
-const guardianRetry = helpers.guardianFeedback({
+assert.match(auditWarning.text, /e edit & execute · runs after current tool call/u)
+const auditRetry = helpers.auditFeedback({
   active: true,
   paused: true,
   pendingApproval: { auditId: 'audit-critical', verdict: 'critical', status: 'accepted' },
   remediation: { id: 'remediation-audit-critical', auditId: 'audit-critical', phase: 'execution-failed' },
   lastAudit: { id: 'audit-critical', sequence: 2, verdict: 'critical', durationMs: 99, findings: [] }
 })
-assert.match(guardianRetry.text, /a retry · e edit & retry/u)
-assert.match(source, /guardians\.accept/u)
+assert.match(auditRetry.text, /a retry · e edit & retry/u)
+assert.match(source, /audits\.accept/u)
 assert.match(source, /name === 'a'/u)
 assert.match(source, /name === 'e'/u)
 assert.match(source, /screen\.setBuffer\(editableText\)/u)
-assert.match(source, /acceptGuardian\(editedText, edit\.auditId\)/u)
-assert.match(source, /guardianView\?\.paused === true && name === 'c'/u)
+assert.match(source, /acceptAudit\(editedText, edit\.auditId\)/u)
+assert.match(source, /auditView\?\.paused === true && name === 'c'/u)
 assert.match(source, /remediation\.phase === 'completed'/u)
 assert.match(source, /pendingApproval\?\.verdict !== 'critical' && name === 'r'/u)
 assert.match(source, /ctx\.get\('sessionController'\)/u)

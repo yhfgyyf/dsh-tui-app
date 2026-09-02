@@ -1,6 +1,6 @@
 {
   "name": "dsh-tui-app",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Readline-based interactive terminal profile bundle for DeepSeek Harness.",
   "license": "MIT",
   "type": "module",

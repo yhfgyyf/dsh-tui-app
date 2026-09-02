@@ -44,11 +44,11 @@ ID, or personal project information.
   Shift+Tab.
 - DSH slash-command registry and user-invocable Skill integration, plus an
   explicit `!<command>` local shell shortcut.
-- Optional Guardian integration: unaccepted audits appear as separate green or
+- Optional Audit integration: unaccepted audits appear as separate green or
   red transcript blocks. `a` executes the proposal unchanged; `e` loads it into
   the composer for editing and Enter executes it. Warning is steered after the
   current tool call without canceling the Agent; critical is already paused and
-  starts its accepted repair immediately. A paused Guardian uses `c` to copy
+  starts its accepted repair immediately. A paused Audit uses `c` to copy
   feedback through OSC 52.
 
 ## Install
@@ -81,12 +81,12 @@ dsh plugin --profile tui add github:yhfgyyf/dsh-auto-preset-router
 dsh --profile tui --preset auto
 ```
 
-To add the explicit fifth Guardian preset and its persistent Codex review,
-install the Guardian bundle too. It does not become an Auto Router target:
+To add the explicit fifth Audit preset and its persistent Codex review,
+install the Audit bundle too. It does not become an Auto Router target:
 
 ```sh
-dsh plugin --profile tui add github:yhfgyyf/dsh-guardian-mode
-dsh --profile tui --preset guardian
+dsh plugin --profile tui add github:yhfgyyf/dsh-audit-mode
+dsh --profile tui --preset audit
 ```
 
 ## Commands and keys
@@ -100,7 +100,7 @@ The shipped DeepSeek V4 Flash/Pro routes are text-only; rc.1 adds the official
 that declares image input, before sending. DSH application commands such as `/compact`,
 `/goal`, `/feedback`, and `/export` are merged from the shared command
 registry when their providers are composed.
-Guardian adds `/guardian status|now|history|accept|resume` through that same registry.
+Audit adds `/audit status|now|history|accept|resume` through that same registry.
 
 User-invocable skills from the active Agent Preset also appear in the `/` menu.
 Type `/skill-name`, or select it and press Tab to insert `/skill-name `, then add
@@ -113,7 +113,7 @@ and a skill share a name, the host command takes precedence.
 Main keys: Enter sends, Up/Down navigate history or pickers, Tab completes,
 Shift+Tab cycles permission presets, Ctrl+V pastes a clipboard image on macOS,
 Esc interrupts/closes, Ctrl+L clears, and Ctrl+D exits.
-With a pending Guardian review and an empty composer, `a` executes remediation
+With a pending Audit review and an empty composer, `a` executes remediation
 unchanged and `e` opens an editable draft; Enter executes it and Esc cancels.
 While paused, `c` copies the latest feedback. `r` resumes only a failure/manual
 pause that has no pending critical approval.
